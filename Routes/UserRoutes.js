@@ -23,6 +23,7 @@ router.post("/signUp",async (req, res, next)=> {
           bcrypt.genSalt(10).then((salt)=> {
               bcrypt.hash(reqUser.password,salt).then(hash => {
                   reqUser.password = hash;
+
                   User.create(reqUser).then(() => {
                       res.status(200).json({message : "User Created Successfully"})
                   })
@@ -34,7 +35,14 @@ router.post("/signUp",async (req, res, next)=> {
 router.post('/login', async (req, res) => {
     const loginData = req.body.user;
 
+
     const test = await User.findOne({userName : loginData.userName}).select("password verified").exec();
+
+
+    if (test == null){
+        res.status(400).json({message : "Wrong Username Or Password"})
+        return
+    }
 
     if (test.password !== undefined && test.verified){
         if (await bcrypt.compare(loginData.password,test.password)){
@@ -50,9 +58,6 @@ router.post('/login', async (req, res) => {
     }
 })
 
-router.post("/test",permissions("ADMIN"),(req, res, next)=> {
-    res.status(200).json({message : "Success"})
-})
 
 
 
