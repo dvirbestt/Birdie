@@ -6,7 +6,8 @@ const Post = mongoose.model("Post",{
     content : Object,
     timeCreated : {type : Date, default : Date.now()},
     likes : Array,
-    comments : Array
+    comments : Array,
+    tags : Array
 })
 
 module.exports = Post
