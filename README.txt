@@ -6,3 +6,4 @@ npm i mongoose
 npm i bcrypt
 npm i nodemon
 npm i jsonwebtoken
+1

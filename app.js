@@ -23,7 +23,7 @@ app.use((req,res,next)=> {
 })
 
 
-app.use("/users",UserRoutes)
+app.use("/Users",UserRoutes)
 app.use("/Posts",PostRoutes)
 
 
