@@ -40,8 +40,30 @@ router.post("/like",permissions("USER"),async (req, res)=> {
     }else {
         res.status(404).json({message: "Couldn't Find the post "})
     }
+})
 
 
+router.post("/comment",permissions("USER"),async (req, res) => {
+    const token = req.headers.authorization.substring(7);
+    let user = Jwt.decode(token).user;
+
+    const postId = req.body.post._id;
+    let post = (await Post.find({_id: postId}).exec())[0];
+
+    if (post === null){
+        res.status(404).json({message : "Post does not exist"});
+        return
+    }
+
+    post.comments.push({
+        content : req.body.post.comment,
+        ownerId : user._id,
+        ownerUserName : user.userName,
+        timeStamp : Date.now()});
+
+    Post.findOneAndUpdate({_id: post._id},post).then(()=> {
+        res.status(200).json({message: "You Commented On this post"})
+    })
 
 })
 
