@@ -10,7 +10,12 @@ const User = mongoose.model("user", {
     verified : {
         type : Boolean,
         default : true
-    }
+    },
+    interests : Array,
+    follows : Array,
+    followers : Array,
+    blocked : Array,
+    blockedBy :Array
 })
 
 module.exports = User;
