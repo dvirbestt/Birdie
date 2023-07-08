@@ -3,6 +3,8 @@ const router = express.Router();
 const permissions = require('../Middleware/Permmissions')
 const Jwt = require('jsonwebtoken');
 const Post = require("../Models/Post")
+const mongoose = require("mongoose");
+const {randomUUID} = require("crypto");
 
 router.post("/addPost",permissions("USER"),(req, res, next)=> {
 
@@ -56,6 +58,7 @@ router.post("/comment",permissions("USER"),async (req, res) => {
     }
 
     post.comments.push({
+        _id: randomUUID(),
         content : req.body.post.comment,
         ownerId : user._id,
         ownerUserName : user.userName,
@@ -64,8 +67,66 @@ router.post("/comment",permissions("USER"),async (req, res) => {
     Post.findOneAndUpdate({_id: post._id},post).then(()=> {
         res.status(200).json({message: "You Commented On this post"})
     })
+});
+
+router.delete("/unlike",permissions("USER"),async (req, res)=> {
+    const token = req.headers.authorization.substring(7);
+    const user = Jwt.decode(token).user;
+    const post = await Post.findOne({_id:req.body.post._id}).exec();
+
+    let indexOfLike = post.likes.indexOf(user._id);
+
+    if (indexOfLike !== -1){
+        post.likes.splice(indexOfLike,1);
+        Post.findOneAndUpdate({_id: post._id},post).exec().then(()=>{
+            res.status(200).json({message: "You unliked that post"})
+        })
+    }else {
+        res.status(400).json({message : "couldn't remove the like"})
+    }
+
+});
+
+
+router.delete("/deleteComment",permissions("USER"),async (req ,res) => {
+    const token = req.headers.authorization.substring(7);
+    const user = Jwt.decode(token).user;
+    let post = await Post.findOne({_id: req.body.post._id}).exec()
+
+    let theComment = post.comments.filter((comment)=> comment._id === req.body.post.commentId)[0];
+
+
+    if (user.role === "ADMIN" && post){
+        post.comments = post.comments.filter((comment)=> comment._id !== theComment._id)
+        Post.findOneAndUpdate({_id: post._id},post).exec();
+        res.status(200).json({message : "Comment deleted successfully"})
+        return
+    }else if(user._id === theComment.ownerId || user.userName === post.ownerName ){
+        post.comments = post.comments.filter((comment)=> comment._id !== theComment._id);
+        Post.findOneAndUpdate({_id: post._id},post).exec();
+        res.status(200).json({message : "Comment deleted successfully"})
+        return
+    }
+    res.status(400).json({message : "Couldn't delete Comment"})
+
+});
+
+
+router.delete("/deletePost",permissions("USER"),async (req,res)=> {
+    const token = req.headers.authorization.substring(7);
+    const user = Jwt.decode(token).user;
+    let post= await Post.findOne({_id : req.body.post._id}).exec();
+
+    if (user.role === "ADMIN" || user.userName === post.ownerName){
+        Post.findByIdAndDelete({_id: post._id}).exec().then(()=> {
+            res.status(200).json({message : "Post deleted successfully"});
+        })
+    }else {
+        res.status(400).json({message : "You Cant Delete that Post"});
+    }
 
 })
+
 
 
 module.exports = router;
