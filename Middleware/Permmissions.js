@@ -15,6 +15,7 @@ const authorization = (lowest)=> {
 
                 if (token.exp <= Date.now() /1000) {
                     res.status(403).json({message : "Token Expired"})
+                    return
                 }else {
 
                     if (roles.indexOf(lowest)<= roles.indexOf(token.user.role)){

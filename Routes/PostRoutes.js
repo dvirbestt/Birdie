@@ -128,5 +128,12 @@ router.delete("/deletePost",permissions("USER"),async (req,res)=> {
 })
 
 
+router.post("/getPosts",permissions("USER"), async (req, res) => {
+    const token = req.headers.authorization.substring(7);
+    const user = Jwt.decode(token).user;
+    const data = await Post.find();
+    res.status(200).json({data});
+})
+
 
 module.exports = router;
