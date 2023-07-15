@@ -23,13 +23,14 @@ const authorization = (lowest)=> {
                     }else {
 
                         res.status(403).json({message: "You Have No Permission"})
-
+                        return;
                     }
 
                 }
 
             } else {
                 res.status(403).json({message: "No Token Sent"})
+                return;
             }
         }
     }

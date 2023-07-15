@@ -26,6 +26,7 @@ router.post("/like",permissions("USER"),async (req, res)=> {
 
     let postId = req.body.post._id;
 
+
     let post = (await Post.find({_id: postId}).exec())[0];
     if (post){
         const alreadyLiked = post.likes.indexOf(user._id);
@@ -33,7 +34,10 @@ router.post("/like",permissions("USER"),async (req, res)=> {
         if (alreadyLiked === -1){
             post.likes.push(user._id)
             Post.findOneAndUpdate({_id: post._id},post).then((file)=> {
-                res.status(200).json({message: "You Liked This Post"})
+                Post.findOne({_id : post._id}).exec().then((file)=> {
+                    res.status(200).json({message: "You Liked This Post", post: file})
+                })
+
             })
 
         }else {
@@ -69,17 +73,21 @@ router.post("/comment",permissions("USER"),async (req, res) => {
     })
 });
 
-router.delete("/unlike",permissions("USER"),async (req, res)=> {
+router.post("/unlike",permissions("USER"),async (req, res)=> {
     const token = req.headers.authorization.substring(7);
     const user = Jwt.decode(token).user;
+
+
     const post = await Post.findOne({_id:req.body.post._id}).exec();
 
     let indexOfLike = post.likes.indexOf(user._id);
 
     if (indexOfLike !== -1){
         post.likes.splice(indexOfLike,1);
-        Post.findOneAndUpdate({_id: post._id},post).exec().then(()=>{
-            res.status(200).json({message: "You unliked that post"})
+        Post.findOneAndUpdate({_id: post._id},post).exec().then(()=> {
+            Post.findOne({_id : post._id}).exec().then((file)=> {
+                res.status(200).json({message: "You unliked that post", post: file})
+            })
         })
     }else {
         res.status(400).json({message : "couldn't remove the like"})
@@ -133,6 +141,12 @@ router.post("/getPosts",permissions("USER"), async (req, res) => {
     const user = Jwt.decode(token).user;
     const data = await Post.find();
     res.status(200).json({data});
+})
+
+
+router.post("/getPost",permissions("GUEST"),async (req,res)=> {
+    const post = await Post.find({_id: req.body.post._id});
+    res.status(200).json({post})
 })
 
 
